@@ -1,12 +1,12 @@
-const {
+import {
     createUser,
     authenticateUser,
     refreshAccessToken,
     logoutUser,
     getUserById,
-} = require('../services/userService');
-const { success, error } = require('../utils/response');
-const { ERROR_CODES } = require('../utils/errorCodes');
+} from '../services/userService.js';
+import { success, error } from '../utils/response.js';
+import { ERROR_CODES } from '../utils/errorCodes.js';
 
 const COOKIE_OPTIONS = {
     httpOnly: true,
@@ -15,7 +15,7 @@ const COOKIE_OPTIONS = {
     maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
-const signup = async (req, res) => {
+export const signup = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
@@ -43,7 +43,7 @@ const signup = async (req, res) => {
     }
 };
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -67,7 +67,7 @@ const login = async (req, res) => {
     }
 };
 
-const refresh = async (req, res) => {
+export const refresh = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
 
@@ -85,7 +85,7 @@ const refresh = async (req, res) => {
     }
 };
 
-const logout = async (req, res) => {
+export const logout = async (req, res) => {
     try {
         await logoutUser(req.user._id);
 
@@ -97,7 +97,7 @@ const logout = async (req, res) => {
     }
 };
 
-const getMe = async (req, res) => {
+export const getMe = async (req, res) => {
     try {
         const user = await getUserById(req.user._id);
 
@@ -113,12 +113,4 @@ const getMe = async (req, res) => {
         }
         return error(res, err.message, 500, ERROR_CODES.INTERNAL_SERVER_ERROR);
     }
-};
-
-module.exports = {
-    signup,
-    login,
-    refresh,
-    logout,
-    getMe,
 };

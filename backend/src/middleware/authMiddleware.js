@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
-const { error } = require('../utils/response');
-const { ERROR_CODES } = require('../utils/errorCodes');
+import jwt from 'jsonwebtoken';
+import User from '../models/userModel.js';
+import { error } from '../utils/response.js';
+import { ERROR_CODES } from '../utils/errorCodes.js';
 
-const protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
     let token;
 
     if (
@@ -34,5 +34,3 @@ const protect = async (req, res, next) => {
         return error(res, 'Not authorized, no token', 401, ERROR_CODES.NOT_AUTHORIZED);
     }
 };
-
-module.exports = { protect };

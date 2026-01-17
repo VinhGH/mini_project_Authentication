@@ -1,10 +1,12 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const connectDB = require('./config/db');
-const authRoutes = require('./routes/authRoutes');
-const { swaggerDocs } = require('./config/swagger');
+import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import { swaggerDocs } from './config/swagger.js';
 
 const app = express();
 

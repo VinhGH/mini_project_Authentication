@@ -1,6 +1,6 @@
-const User = require('../models/userModel');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+import User from '../models/userModel.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 const generateAccessToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_ACCESS_SECRET, {
@@ -14,7 +14,7 @@ const generateRefreshToken = (userId) => {
     });
 };
 
-const createUser = async (name, email, password) => {
+export const createUser = async (name, email, password) => {
     const userExists = await User.findOne({ email });
     if (userExists) {
         const error = new Error('Email already exists');
@@ -34,7 +34,7 @@ const createUser = async (name, email, password) => {
     return user;
 };
 
-const authenticateUser = async (email, password) => {
+export const authenticateUser = async (email, password) => {
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
@@ -68,7 +68,7 @@ const authenticateUser = async (email, password) => {
     };
 };
 
-const refreshAccessToken = async (refreshToken) => {
+export const refreshAccessToken = async (refreshToken) => {
     if (!refreshToken) {
         const error = new Error('Refresh token required');
         error.code = 'REFRESH_TOKEN_REQUIRED';
@@ -96,11 +96,11 @@ const refreshAccessToken = async (refreshToken) => {
     }
 };
 
-const logoutUser = async (userId) => {
+export const logoutUser = async (userId) => {
     await User.findByIdAndUpdate(userId, { refreshToken: null });
 };
 
-const getUserById = async (userId) => {
+export const getUserById = async (userId) => {
     const user = await User.findById(userId).select('-password');
 
     if (!user) {
@@ -110,14 +110,4 @@ const getUserById = async (userId) => {
     }
 
     return user;
-};
-
-module.exports = {
-    createUser,
-    authenticateUser,
-    refreshAccessToken,
-    logoutUser,
-    getUserById,
-    generateAccessToken,
-    generateRefreshToken,
 };
