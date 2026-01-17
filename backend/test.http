@@ -1,0 +1,33 @@
+### 1. Health Check
+GET http://localhost:3001
+
+### 2. Signup (Đăng ký)
+POST http://localhost:3001/api/auth/signup
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "123456"
+}
+
+### 3. Login (Đăng nhập)
+POST http://localhost:3001/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "123456"
+}
+
+### 4. Get Me (Lấy thông tin user - Cần token)
+# Thay YOUR_ACCESS_TOKEN bằng token nhận được từ login
+GET http://localhost:3001/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NmIxZDVmM2M1MmI2M2Y2NGIyNDJhNiIsImlhdCI6MTc2ODYyNzU2MywiZXhwIjoxNzY4NjI4NDYzfQ.XptBmiaRYZ7krZvCD9bh3AqBWt5--Dhisu4Vs_HagUo
+
+### 5. Refresh Token (Làm mới access token)
+POST http://localhost:3001/api/auth/refresh
+
+### 6. Logout (Đăng xuất - Cần token)
+POST http://localhost:3001/api/auth/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NmIxZDVmM2M1MmI2M2Y2NGIyNDJhNiIsImlhdCI6MTc2ODYyNzU2MywiZXhwIjoxNzY4NjI4NDYzfQ.XptBmiaRYZ7krZvCD9bh3AqBWt5--Dhisu4Vs_HagUo
