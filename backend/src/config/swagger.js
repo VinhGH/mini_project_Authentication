@@ -16,8 +16,10 @@ const options = {
         },
         servers: [
             {
-                url: process.env.API_URL,
-                description: 'Development server',
+                url: process.env.NODE_ENV === 'production'
+                    ? process.env.API_URL || 'https://mini-project-authentication.onrender.com'
+                    : 'http://localhost:3001',
+                description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
             },
         ],
         components: {
