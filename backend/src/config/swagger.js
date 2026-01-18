@@ -18,10 +18,12 @@ const options = {
         },
         servers: [
             {
-                url: process.env.NODE_ENV === 'production'
-                    ? process.env.API_URL || 'https://mini-project-authentication.onrender.com'
-                    : 'http://localhost:3001',
-                description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
+                url: 'https://mini-project-authentication.onrender.com',
+                description: 'Production server (Render)',
+            },
+            {
+                url: 'http://localhost:3001',
+                description: 'Development server (Local)',
             },
         ],
         components: {
