@@ -34,8 +34,12 @@ export const setUser = (user) => {
     localStorage.setItem('user', JSON.stringify(user));
 };
 
+const API_BASE_URL = import.meta.env.PROD
+    ? 'https://mini-project-authentication.onrender.com/api'
+    : 'http://localhost:3001/api';
+
 const apiInstance = axios.create({
-    baseURL: 'http://localhost:3001/api',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -93,7 +97,7 @@ apiInstance.interceptors.response.use(
 
             try {
                 const response = await axios.post(
-                    'http://localhost:3001/api/auth/refresh',
+                    `${API_BASE_URL}/auth/refresh`,
                     {},
                     { withCredentials: true }
                 );
