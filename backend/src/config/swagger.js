@@ -48,7 +48,7 @@ const options = {
                         },
                         password: {
                             type: 'string',
-                            description: 'Mật khẩu người dùng',
+                            description: 'Mật khẩu người dùng (hashed)',
                             example: '123456',
                         },
                         role: {
@@ -57,6 +57,10 @@ const options = {
                             default: 'user',
                             description: 'Vai trò người dùng',
                             example: 'user',
+                        },
+                        refreshToken: {
+                            type: 'string',
+                            description: 'Refresh token (không trả về trong response)',
                         },
                         createdAt: {
                             type: 'string',
@@ -72,10 +76,14 @@ const options = {
                         },
                     },
                 },
-                UserInput: {
+                UserResponse: {
                     type: 'object',
-                    required: ['name', 'email', 'password'],
                     properties: {
+                        id: {
+                            type: 'string',
+                            description: 'ID người dùng',
+                            example: '507f1f77bcf86cd799439012',
+                        },
                         name: {
                             type: 'string',
                             description: 'Tên người dùng',
@@ -87,10 +95,35 @@ const options = {
                             description: 'Email người dùng',
                             example: 'user@example.com',
                         },
+                        role: {
+                            type: 'string',
+                            enum: ['user', 'admin'],
+                            description: 'Vai trò người dùng',
+                            example: 'user',
+                        },
+                    },
+                },
+                SignupInput: {
+                    type: 'object',
+                    required: ['name', 'email', 'password'],
+                    properties: {
+                        name: {
+                            type: 'string',
+                            description: 'Tên người dùng',
+                            example: 'Nguyễn Văn A',
+                            minLength: 1,
+                        },
+                        email: {
+                            type: 'string',
+                            format: 'email',
+                            description: 'Email người dùng (phải unique)',
+                            example: 'user@example.com',
+                        },
                         password: {
                             type: 'string',
-                            description: 'Mật khẩu',
+                            description: 'Mật khẩu (tối thiểu 6 ký tự)',
                             example: '123456',
+                            minLength: 6,
                         },
                     },
                 },
@@ -108,6 +141,29 @@ const options = {
                             type: 'string',
                             description: 'Mật khẩu',
                             example: '123456',
+                        },
+                    },
+                },
+                LoginResponse: {
+                    type: 'object',
+                    properties: {
+                        accessToken: {
+                            type: 'string',
+                            description: 'JWT Access Token',
+                            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+                        },
+                        user: {
+                            $ref: '#/components/schemas/UserResponse',
+                        },
+                    },
+                },
+                RefreshTokenResponse: {
+                    type: 'object',
+                    properties: {
+                        accessToken: {
+                            type: 'string',
+                            description: 'JWT Access Token mới',
+                            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
                         },
                     },
                 },
@@ -143,28 +199,46 @@ const options = {
                             type: 'string',
                             description: 'Mã lỗi cụ thể',
                             example: 'VALIDATION_ERROR',
+                            enum: [
+                                'VALIDATION_ERROR',
+                                'USER_NOT_FOUND',
+                                'EMAIL_ALREADY_EXISTS',
+                                'INVALID_CREDENTIALS',
+                                'TOKEN_EXPIRED',
+                                'TOKEN_INVALID',
+                                'NOT_AUTHORIZED',
+                                'REFRESH_TOKEN_REQUIRED',
+                                'REFRESH_TOKEN_INVALID',
+                                'FORBIDDEN',
+                                'INTERNAL_SERVER_ERROR',
+                            ],
                         },
                     },
                 },
             },
             responses: {
-                BadRequest: {
-                    description: 'Dữ liệu đầu vào không hợp lệ',
+                ValidationError: {
+                    description: 'Dữ liệu đầu vào không hợp lệ - thiếu trường bắt buộc',
                     content: {
                         'application/json': {
                             schema: {
                                 $ref: '#/components/schemas/ErrorResponse',
                             },
-                            example: {
-                                success: false,
-                                message: 'Dữ liệu không hợp lệ',
-                                errorCode: 'VALIDATION_ERROR',
+                            examples: {
+                                missingFields: {
+                                    summary: 'Thiếu trường bắt buộc',
+                                    value: {
+                                        success: false,
+                                        message: 'Please add all fields',
+                                        errorCode: 'VALIDATION_ERROR',
+                                    },
+                                },
                             },
                         },
                     },
                 },
-                NotFound: {
-                    description: 'Không tìm thấy tài nguyên',
+                EmailAlreadyExists: {
+                    description: 'Email đã tồn tại trong hệ thống',
                     content: {
                         'application/json': {
                             schema: {
@@ -172,7 +246,103 @@ const options = {
                             },
                             example: {
                                 success: false,
-                                message: 'Không tìm thấy người dùng',
+                                message: 'Email already exists',
+                                errorCode: 'EMAIL_ALREADY_EXISTS',
+                            },
+                        },
+                    },
+                },
+                InvalidCredentials: {
+                    description: 'Email hoặc mật khẩu không đúng',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse',
+                            },
+                            example: {
+                                success: false,
+                                message: 'Invalid credentials',
+                                errorCode: 'INVALID_CREDENTIALS',
+                            },
+                        },
+                    },
+                },
+                Unauthorized: {
+                    description: 'Không có quyền truy cập - token không hợp lệ hoặc đã hết hạn',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse',
+                            },
+                            examples: {
+                                noToken: {
+                                    summary: 'Không có token',
+                                    value: {
+                                        success: false,
+                                        message: 'Not authorized, no token',
+                                        errorCode: 'NOT_AUTHORIZED',
+                                    },
+                                },
+                                invalidToken: {
+                                    summary: 'Token không hợp lệ',
+                                    value: {
+                                        success: false,
+                                        message: 'Token invalid',
+                                        errorCode: 'TOKEN_INVALID',
+                                    },
+                                },
+                                expiredToken: {
+                                    summary: 'Token đã hết hạn',
+                                    value: {
+                                        success: false,
+                                        message: 'Token expired',
+                                        errorCode: 'TOKEN_EXPIRED',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                RefreshTokenRequired: {
+                    description: 'Refresh token không được cung cấp',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse',
+                            },
+                            example: {
+                                success: false,
+                                message: 'Refresh token required',
+                                errorCode: 'REFRESH_TOKEN_REQUIRED',
+                            },
+                        },
+                    },
+                },
+                RefreshTokenInvalid: {
+                    description: 'Refresh token không hợp lệ hoặc đã hết hạn',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse',
+                            },
+                            example: {
+                                success: false,
+                                message: 'Refresh token invalid',
+                                errorCode: 'REFRESH_TOKEN_INVALID',
+                            },
+                        },
+                    },
+                },
+                UserNotFound: {
+                    description: 'Không tìm thấy người dùng',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse',
+                            },
+                            example: {
+                                success: false,
+                                message: 'User not found',
                                 errorCode: 'USER_NOT_FOUND',
                             },
                         },
@@ -187,8 +357,8 @@ const options = {
                             },
                             example: {
                                 success: false,
-                                message: 'Lỗi hệ thống',
-                                errorCode: 'INTERNAL_ERROR',
+                                message: 'Internal server error',
+                                errorCode: 'INTERNAL_SERVER_ERROR',
                             },
                         },
                     },
@@ -199,6 +369,13 @@ const options = {
                     type: 'http',
                     scheme: 'bearer',
                     bearerFormat: 'JWT',
+                    description: 'JWT Access Token - Nhận được từ endpoint /api/auth/login hoặc /api/auth/refresh',
+                },
+                cookieAuth: {
+                    type: 'apiKey',
+                    in: 'cookie',
+                    name: 'refreshToken',
+                    description: 'Refresh Token được lưu trong HTTP-only cookie',
                 },
             },
         },
